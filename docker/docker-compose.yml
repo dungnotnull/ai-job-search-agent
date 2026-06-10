@@ -1,0 +1,70 @@
+services:
+  ai-job-search-agent:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: ai-job-search-enhanced:latest
+    container_name: ai-job-search-agent
+    ports:
+      - "8017:8017"
+    volumes:
+      - job_search_data:/app/data
+      - job_search_models:/app/models
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - CLAUDE_MODEL=${CLAUDE_MODEL:-claude-opus-4-8}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - PRIVACY_MODE=${PRIVACY_MODE:-false}
+    command: ["python", "agent/main.py", "serve", "--host", "0.0.0.0", "--port", "8017"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8017/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      ollama:
+        condition: service_started
+    profiles:
+      - default
+      - gpu
+
+  ai-job-search-agent-gpu:
+    extends:
+      service: ai-job-search-agent
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - CUDA_VISIBLE_DEVICES=0
+    profiles:
+      - gpu
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    profiles:
+      - default
+      - gpu
+
+volumes:
+  job_search_data:
+    driver: local
+  job_search_models:
+    driver: local
+  ollama_models:
+    driver: local

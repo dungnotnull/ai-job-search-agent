@@ -1,0 +1,73 @@
+agent:
+  name: ai-job-search-enhanced
+  version: "1.0.0"
+  log_level: INFO
+  data_dir: ./data
+  models_dir: ./models
+
+search:
+  default_n_jobs: 20
+  max_n_jobs: 100
+  default_tone: formal
+  precision_mode: false
+  min_match_score: 0.40
+  top_k_candidates: 20
+  top_k_reranked: 5
+  cover_letters_for_top: 3
+
+llm:
+  provider_order: [claude, openai, ollama]
+  claude_model: claude-opus-4-8
+  openai_model: gpt-4o
+  ollama_model: llama3
+  ollama_base_url: http://localhost:11434
+  privacy_mode: false
+  max_retries: 3
+  retry_base_delay: 1.0
+  cover_letter_max_tokens: 900
+  gap_analysis_max_tokens: 1500
+  salary_context_max_tokens: 400
+  research_synthesis_max_tokens: 1000
+
+hf_models:
+  default_embedding: minilm
+  precision_embedding: bge-large
+  reranker: bge-reranker
+  sentiment: distilbert-sentiment
+  summarizer: bart-cnn
+  idle_unload_seconds: 600
+  batch_size: 32
+
+salary_predictor:
+  model_path: ./models/salary_xgb.pkl
+  synthetic_train_samples: 5000
+  validation_split: 0.20
+  target_mae_usd: 8000
+
+sentiment:
+  min_sentence_length: 15
+  max_sentences_per_company: 100
+  recency_weight_months: 12
+  recency_multiplier: 2.0
+
+knowledge_updater:
+  schedule: "0 2 * * 0"
+  arxiv_categories: [cs.CL, cs.IR, cs.LG]
+  max_results_per_query: 15
+  max_new_per_run: 10
+  score_recency_weight: 0.6
+  score_relevance_weight: 0.4
+  brain_file: ./SECOND-KNOWLEDGE-BRAIN.md
+
+quality_gates:
+  min_cover_letter_words: 100
+  max_cover_letter_words: 600
+  min_gap_skills: 3
+  min_match_score: 0.40
+  salary_confidence_min: 0.50
+
+server:
+  host: "0.0.0.0"
+  port: 8017
+  workers: 1
+  reload: false
